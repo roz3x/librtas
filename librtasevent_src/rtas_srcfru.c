@@ -60,7 +60,7 @@ parse_fru_id_scn(struct rtas_event *re)
 {
     struct rtas_fru_id_scn *fru_id;
     struct rtas_fru_id_scn_raw *fru_id_raw;
-
+    char *start;
     fru_id = malloc(sizeof(*fru_id));
     if (fru_id == NULL) {
         errno = ENOMEM;
@@ -72,24 +72,28 @@ parse_fru_id_scn(struct rtas_event *re)
     fru_id_raw = (struct rtas_fru_id_scn_raw *)(re->buffer + re->offset);
     parse_fru_hdr(&fru_id->fruhdr, &fru_id_raw->fruhdr);
     re->offset += RE_FRU_HDR_SZ;
+    start = (char*)fru_id_raw->part_no;
 
     if (fruid_has_part_no(fru_id)) {
-        rtas_copy(fru_id->part_no, re, 7);
+        memcpy(fru_id->part_no, start, 7);
         fru_id->part_no[7] = '\0';
+        start += 8;
     }
 
     if (fruid_has_proc_id(fru_id)) {
-        rtas_copy(fru_id->procedure_id, re, 7);
+        memcpy(fru_id->procedure_id, start, 7);
         fru_id->procedure_id[7] = '\0';
+        start += 8;
     }
 
     if (fruid_has_ccin(fru_id)) {
-        rtas_copy(fru_id->ccin, re, 4);
+        memcpy(fru_id->ccin, start, 4);
         fru_id->ccin[4] = '\0';
+        start += 4;
     }
             
     if (fruid_has_serial_no(fru_id)) {
-        rtas_copy(fru_id->serial_no, re, 12);
+        memcpy(fru_id->serial_no, start, 12);
         fru_id->serial_no[12] = '\0';
     }
 
